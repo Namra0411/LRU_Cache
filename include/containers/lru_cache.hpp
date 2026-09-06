@@ -56,9 +56,7 @@ class LRUCache
 public:
     explicit LRUCache(size_t cap) : capacity(cap), head(nullptr), tail(nullptr) {}
 
-    // Returns by value now, not by reference. Returning V& into a node that
-    // another thread could evict a moment later is a use-after-free
-    // waiting to happen once this is actually concurrent.
+    
     V get(const K &key)
     {
         lock_guard<mutex> lock(mtx);

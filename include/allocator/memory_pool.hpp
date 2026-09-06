@@ -7,11 +7,9 @@ using namespace std;
 
 /*
     MemoryPool:
-    - fixed-block-size pool, preallocated in slabs
-    - the hot path (allocate/deallocate) is lock-free: a Treiber-stack
-      style free list using atomic compare-exchange
-    - refilling (grabbing a new slab from the OS) is rare, so it still
-      uses a plain mutex - not worth making that part lock-free too
+    - Manages fixed size blocks in slabs.
+    - Uses a lock free free list for fast allocate/deallocate.
+    - Uses a mutex only when we need to get a new slab.
 */
 class MemoryPool
 {
@@ -30,8 +28,8 @@ class MemoryPool
 
     atomic<Block *> freeList;
     atomic<size_t> blockSize; // fixed once, on first allocate() call
-    mutex refillMtx;          // only taken when the free list runs dry, or on first init
-    Slab *slabList;           // only touched under refillMtx, so it's plain
+    mutex refillMtx;          // only taken when the free list runs out, or on first init
+    Slab *slabList;           // only touched under mutex , so it's plain
 
     // Grab a new slab of SLAB_BLOCKS blocks and push them all onto the
     // lock-free free list. Called with refillMtx held.
@@ -96,11 +94,7 @@ public:
 
     void *allocate(size_t size)
     {
-        // Properly synchronized first-use init: every thread checks the
-        // atomic first (fast path once set), and only threads racing on
-        // the very first call ever take the lock, with a second check
-        // inside it (classic correct double-checked locking, this time
-        // actually correct because blockSize is atomic).
+        //doubke check lock for initialization
         if (blockSize.load(memory_order_acquire) == 0)
         {
             lock_guard<mutex> lock(refillMtx);
