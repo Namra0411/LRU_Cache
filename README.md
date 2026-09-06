@@ -1,4 +1,4 @@
-<img width="1387" height="391" alt="Screenshot 2026-09-06 180423" src="https://github.com/user-attachments/assets/aebaae4c-6788-4bd2-af6a-f9c7ff065369" /># LRU Cache with Lock-Free Memory Pool
+# LRU Cache with Lock-Free Memory Pool
 
 A thread-safe, low-latency LRU (Least Recently Used) cache implemented in modern C++17, backed by a custom lock-free memory pool instead of the default heap allocator.
 
@@ -18,17 +18,14 @@ The cache itself exposes O(1) `get`/`put` and is designed to be safe to call fro
 - **Single mutex guarding the cache's map/list state** (`get`/`put`), since the shared hash map and linked list pointers are not otherwise safe under concurrent mutation.
 
 ## File Structure
-
-```
 include/
 ├── allocator/
-│   ├── memory_pool.hpp      # Lock-free, slab-based memory pool
-│   └── pool_allocator.hpp   # Adapter: bridges std-style allocator interface to MemoryPool
+│ ├── memory_pool.hpp # Lock-free, slab-based memory pool
+│ └── pool_allocator.hpp # Adapter: bridges std-style allocator interface to MemoryPool
 ├── containers/
-│   └── lru_cache.hpp        # LRUCache: hash map + intrusive DLL, mutex-guarded
+│ └── lru_cache.hpp # LRUCache: hash map + intrusive DLL, mutex-guarded
 src/
-└── main.cpp                 # Basic usage demo
-```
+└── main.cpp # Basic usage demo
 
 ## Data Structures Used
 
@@ -53,8 +50,8 @@ src/
 
 1. **Custom allocator, not just custom data structure.** Most LRU cache implementations stop at the hash-map-plus-linked-list design. This one also replaces the allocation strategy underneath it.
 2. **Lock-free, not just "has a mutex."** The memory pool's hot path uses atomic CAS instead of a mutex — a meaningfully different (and harder to get right) concurrency approach than simply wrapping everything in a lock.
+
 ## Benchmarks Results
-## Benchmarks
 
 ### LRU Cache — single-threaded allocator overhead
 Pool vs system allocator vs a mutex-guarded allocator, no threads/contention
@@ -67,6 +64,7 @@ Pool vs a mutex-guarded allocator only, with LRUCache's own mutex removed
 from the picture — the actual scenario the lock-free design targets.
 
 <img width="1373" height="746" alt="Screenshot 2026-09-06 180407" src="https://github.com/user-attachments/assets/4080a882-4294-47da-81ad-bdee1f57b7d4" />
+
 ## Building and Running
 
 ```bash
