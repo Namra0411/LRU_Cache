@@ -38,8 +38,7 @@ class MemoryPool
     void refill()
     {
         size_t bytes = blockSize.load(memory_order_relaxed) * SLAB_BLOCKS;
-        char *base = static_cast<char *>(::operator new(bytes));
-
+        char *base = static_cast<char *>(::operator new(bytes, std::align_val_t(64)));
         Slab *slab = new Slab;
         slab->memory = base;
         slab->next = slabList;
@@ -86,7 +85,7 @@ public:
         while (s)
         {
             Slab *next = s->next;
-            ::operator delete(s->memory);
+            ::operator delete(s->memory, std::align_val_t(64));
             delete s;
             s = next;
         }
@@ -108,6 +107,7 @@ public:
             if (blockSize.load(memory_order_relaxed) == 0)
             {
                 size_t bs = size > sizeof(Block) ? size : sizeof(Block);
+                bs = (bs + 63) & ~size_t(63);
                 blockSize.store(bs, memory_order_release);
             }
         }
