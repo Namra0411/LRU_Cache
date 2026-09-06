@@ -1,4 +1,4 @@
-# LRU Cache with Lock-Free Memory Pool
+<img width="1387" height="391" alt="Screenshot 2026-09-06 180423" src="https://github.com/user-attachments/assets/aebaae4c-6788-4bd2-af6a-f9c7ff065369" /># LRU Cache with Lock-Free Memory Pool
 
 A thread-safe, low-latency LRU (Least Recently Used) cache implemented in modern C++17, backed by a custom lock-free memory pool instead of the default heap allocator.
 
@@ -53,8 +53,20 @@ src/
 
 1. **Custom allocator, not just custom data structure.** Most LRU cache implementations stop at the hash-map-plus-linked-list design. This one also replaces the allocation strategy underneath it.
 2. **Lock-free, not just "has a mutex."** The memory pool's hot path uses atomic CAS instead of a mutex — a meaningfully different (and harder to get right) concurrency approach than simply wrapping everything in a lock.
+## Benchmarks Results
+## Benchmarks
 
+### LRU Cache — single-threaded allocator overhead
+Pool vs system allocator vs a mutex-guarded allocator, no threads/contention
+involved — isolates the raw cost of each allocation strategy.
 
+<img width="1387" height="391" alt="Screenshot 2026-09-06 180423" src="https://github.com/user-attachments/assets/fe90d081-84e3-4769-91f7-bfe83a413cd9" />
+
+### Memory Pool — multi-threaded, isolated from the cache's lock
+Pool vs a mutex-guarded allocator only, with LRUCache's own mutex removed
+from the picture — the actual scenario the lock-free design targets.
+
+<img width="1373" height="746" alt="Screenshot 2026-09-06 180407" src="https://github.com/user-attachments/assets/4080a882-4294-47da-81ad-bdee1f57b7d4" />
 ## Building and Running
 
 ```bash
